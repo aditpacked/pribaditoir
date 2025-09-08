@@ -1,0 +1,21 @@
+local allowedIDs = {
+    "9wenerd",
+    "6atotkaca9"
+}
+
+local player = game.Players.LocalPlayer
+local playerID = player.Name
+
+local allowed = false
+for _, id in pairs(allowedIDs) do
+    if playerID == id then
+        allowed = true
+        break
+    end
+end
+
+if not allowed then
+    return
+end
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/aditpacked/pribaditoir/main/ATIN"))()
