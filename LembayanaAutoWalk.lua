@@ -1,4 +1,4 @@
--- WataX Script 
+-- Suckardy Script 
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -49692,52 +49692,67 @@ end
 
 -- =========================
 
-local screenGui = Instance.new("ScreenGui",player:WaitForChild("PlayerGui"))
+local player = game.Players.LocalPlayer
+
+-- ScreenGui
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 screenGui.ResetOnSpawn = false
 
-local frame = Instance.new("Frame",screenGui)
-frame.Size = UDim2.new(0,240,0,160)
-frame.Position = UDim2.new(0.5,-120,0.5,-80)
-frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+-- Frame utama
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(0, 250, 0, 150)
+frame.Position = UDim2.new(0.5, -125, 0.5, -75)
+frame.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+frame.BorderSizePixel = 0
 frame.Active = true
 frame.Draggable = true
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
 
-local title = Instance.new("TextLabel",frame)
-title.Size = UDim2.new(1,0,0,30)
-title.Text = "⚡ WataX Menu"
-title.BackgroundColor3 = Color3.fromRGB(60,60,60)
-title.TextColor3 = Color3.fromRGB(255,255,255)
-title.Font = Enum.Font.SourceSansBold
+-- Title bar
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+title.Text = "⚡ SUCKARDY"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
 title.TextScaled = true
+title.BorderSizePixel = 0
 
-
-local closeBtn = Instance.new("TextButton",frame)
-closeBtn.Size = UDim2.new(0,30,0,30)
-closeBtn.Position = UDim2.new(0,0,0,0)
-closeBtn.Text = "X"
-closeBtn.BackgroundColor3 = Color3.fromRGB(200,50,50)
-closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+-- Close button
+local closeBtn = Instance.new("TextButton", frame)
+closeBtn.Size = UDim2.new(0, 25, 0, 25)
+closeBtn.Position = UDim2.new(1, -30, 0, 2)
+closeBtn.Text = "✕"
+closeBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextScaled = true
+closeBtn.BorderSizePixel = 0
 closeBtn.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
+-- Minimize button
+local miniBtn = Instance.new("TextButton", frame)
+miniBtn.Size = UDim2.new(0, 25, 0, 25)
+miniBtn.Position = UDim2.new(1, -60, 0, 2)
+miniBtn.Text = "—"
+miniBtn.BackgroundColor3 = Color3.fromRGB(80, 160, 240)
+miniBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+miniBtn.Font = Enum.Font.GothamBold
+miniBtn.TextScaled = true
+miniBtn.BorderSizePixel = 0
 
-local miniBtn = Instance.new("TextButton",frame)
-miniBtn.Size = UDim2.new(0,30,0,30)
-miniBtn.Position = UDim2.new(1,-30,0,0)
-miniBtn.Text = "_"
-miniBtn.BackgroundColor3 = Color3.fromRGB(80,80,200)
-miniBtn.TextColor3 = Color3.fromRGB(255,255,255)
-
-
-local bubbleBtn = Instance.new("TextButton",screenGui)
-bubbleBtn.Size = UDim2.new(0,60,0,40)
-bubbleBtn.Position = UDim2.new(0,20,0.7,0)
-bubbleBtn.Text = "⚡ WataX"
-bubbleBtn.BackgroundColor3 = Color3.fromRGB(0,120,200)
-bubbleBtn.TextColor3 = Color3.fromRGB(255,255,255)
-bubbleBtn.Font = Enum.Font.SourceSansBold
+-- Bubble button (untuk restore frame)
+local bubbleBtn = Instance.new("TextButton", screenGui)
+bubbleBtn.Size = UDim2.new(0, 70, 0, 40)
+bubbleBtn.Position = UDim2.new(0, 20, 0.7, 0)
+bubbleBtn.Text = "⚡ SUCKARDY"
+bubbleBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 240)
+bubbleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+bubbleBtn.Font = Enum.Font.GothamBold
 bubbleBtn.TextScaled = true
+bubbleBtn.BorderSizePixel = 0
 bubbleBtn.Visible = false
 bubbleBtn.Active = true
 bubbleBtn.Draggable = true
@@ -49752,29 +49767,21 @@ bubbleBtn.MouseButton1Click:Connect(function()
     bubbleBtn.Visible = false
 end)
 
+-- Tombol aksi
+local function createButton(parent, text, color, position, size, callback)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = size
+    btn.Position = position
+    btn.Text = text
+    btn.BackgroundColor3 = color
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextScaled = true
+    btn.BorderSizePixel = 0
+    btn.MouseButton1Click:Connect(callback)
+    return btn
+end
 
-local startCP = Instance.new("TextButton",frame)
-startCP.Size = UDim2.new(0.5,-5,0,40)
-startCP.Position = UDim2.new(0,5,0,40)
-startCP.Text = "Start CP"
-startCP.BackgroundColor3 = Color3.fromRGB(50,200,50)
-startCP.TextColor3 = Color3.fromRGB(255,255,255)
-startCP.MouseButton1Click:Connect(runRouteOnce)
-
-
-local stopBtn = Instance.new("TextButton",frame)
-stopBtn.Size = UDim2.new(0.5,-5,0,40)
-stopBtn.Position = UDim2.new(0.5,0,0,40)
-stopBtn.Text = "Stop"
-stopBtn.BackgroundColor3 = Color3.fromRGB(200,50,50)
-stopBtn.TextColor3 = Color3.fromRGB(255,255,255)
-stopBtn.MouseButton1Click:Connect(stopRoute)
-
-
-local startAll = Instance.new("TextButton",frame)
-startAll.Size = UDim2.new(1,-10,0,40)
-startAll.Position = UDim2.new(0,5,0,90)
-startAll.Text = "Start Puncak"
-startAll.BackgroundColor3 = Color3.fromRGB(50,100,200)
-startAll.TextColor3 = Color3.fromRGB(255,255,255)
-startAll.MouseButton1Click:Connect(runAllRoutes)
+local startCP = createButton(frame, "Start CP", Color3.fromRGB(50, 200, 50), UDim2.new(0, 10, 0, 45), UDim2.new(0.48, 0, 0, 35), runRouteOnce)
+local stopBtn = createButton(frame, "Stop", Color3.fromRGB(200, 50, 50), UDim2.new(0.52, 0, 0, 45), UDim2.new(0.48, 0, 0, 35), stopRoute)
+local startAll = createButton(frame, "Start Puncak", Color3.fromRGB(50, 120, 200), UDim2.new(0, 10, 0, 90), UDim2.new(1, -20, 0, 35), runAllRoutes)
