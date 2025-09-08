@@ -1,0 +1,55 @@
+local a={["9wenerd"]=true,["6atotkaca9"]=true}
+local b=game:GetService("Players").LocalPlayer
+if not a[b.Name]then return end
+
+local c=game:GetService("TeleportService")
+local d=game:GetService("CoreGui")
+
+local e=CFrame.new(
+624.894409,1800.09033,3432.27734,
+-0.140389204,6.23166561e-05,0.990096331,
+0.967243671,0.213619947,0.137135446,
+-0.211495727,0.97691685,-0.0300501585)
+
+local f=CFrame.new(
+814.364502,2141.07935,3903.94702,
+-0.648281395,3.22460103e-09,-0.761400819,
+8.89097436e-08,1,-7.1465557e-08,
+0.761400819,-1.14025745e-07,-0.648281395)
+
+local function g(h)
+    if b.Character and b.Character:FindFirstChild("HumanoidRootPart")then
+        b.Character.HumanoidRootPart.CFrame=h
+    end
+end
+
+local i=Instance.new("ScreenGui")
+i.Name="AutoSummitWM"
+i.ResetOnSpawn=false
+i.Parent=d
+
+local j=Instance.new("TextLabel")
+j.Size=UDim2.new(0,400,0,50)
+j.Position=UDim2.new(0.5,-200,0.5,-25)
+j.BackgroundTransparency=1
+j.Text="AUTO SUMMIT AKTIF"
+j.TextColor3=Color3.new(1,1,1)
+j.TextScaled=true
+j.Font=Enum.Font.SourceSansBold
+j.Parent=i
+
+task.spawn(function()
+    g(e)
+    task.wait(2)
+    g(f)
+    task.wait(1)
+    local k=b.Character
+    if k then
+        local l=k:FindFirstChildOfClass("Humanoid")
+        if l then
+            l.Health=0
+        end
+    end
+    task.wait(5)
+    c:Teleport(game.PlaceId,b)
+end)
