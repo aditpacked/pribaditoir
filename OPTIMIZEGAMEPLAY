@@ -1,0 +1,155 @@
+local p=game:GetService("Players").LocalPlayer
+local a={[9240738331]=true,[9039569367]=true}
+if not a[p.UserId]then return end
+
+local u=game:GetService("UserInputService")
+local s=game:GetService("StarterGui")
+local l=game:GetService("Lighting")
+local w=game:GetService("Workspace")
+
+local fts={Kayak=true,["Lari Pencuri"]=true}
+
+local g=Instance.new("ScreenGui")
+g.Name="MinimalGUI"
+g.ResetOnSpawn=false
+g.Parent=p:WaitForChild("PlayerGui")
+g.IgnoreGuiInset=true
+
+local frm=Instance.new("Frame")
+frm.Size=UDim2.new(0,200,0,150)
+frm.Position=UDim2.new(1,-210,0.1,0)
+frm.BackgroundColor3=Color3.fromRGB(30,30,30)
+frm.BackgroundTransparency=0.8
+frm.BorderSizePixel=0
+frm.Parent=g
+frm.Visible=true
+
+local tbtn=Instance.new("TextButton")
+tbtn.Size=UDim2.new(0,30,0,30)
+tbtn.Position=UDim2.new(1,-40,0.05,0)
+tbtn.Text="🐐"
+tbtn.TextScaled=true
+tbtn.BackgroundColor3=Color3.fromRGB(50,50,50)
+tbtn.TextColor3=Color3.fromRGB(255,255,255)
+tbtn.Parent=g
+tbtn.MouseButton1Click:Connect(function()frm.Visible=not frm.Visible end)
+
+local tgls={}
+local function cTgl(n,y,cb)
+    local lbl=Instance.new("TextLabel")
+    lbl.Size=UDim2.new(0,120,0,20)
+    lbl.Position=UDim2.new(0,10,0,y)
+    lbl.Text=n
+    lbl.TextColor3=Color3.new(1,1,1)
+    lbl.BackgroundTransparency=1
+    lbl.TextXAlignment=Enum.TextXAlignment.Left
+    lbl.Parent=frm
+
+    local st=Instance.new("TextButton")
+    st.Size=UDim2.new(0,50,0,20)
+    st.Position=UDim2.new(0,130,0,y)
+    st.Text=fts[n]and"ON"or"OFF"
+    st.TextColor3=fts[n]and Color3.fromRGB(0,255,0)or Color3.fromRGB(255,0,0)
+    st.BackgroundColor3=Color3.fromRGB(40,40,40)
+    st.Parent=frm
+
+    local function uS()
+        st.Text=fts[n]and"ON"or"OFF"
+        st.TextColor3=fts[n]and Color3.fromRGB(0,255,0)or Color3.fromRGB(255,0,0)
+    end
+
+    st.MouseButton1Click:Connect(function()
+        fts[n]=not fts[n]
+        uS()
+        if cb then cb(fts[n]) end
+    end)
+
+    tgls[n]=uS
+end
+
+local mst=Instance.new("TextButton")
+mst.Size=UDim2.new(0,180,0,25)
+mst.Position=UDim2.new(0,10,0,85)
+mst.Text="Master Toggle"
+mst.BackgroundColor3=Color3.fromRGB(60,60,60)
+mst.TextColor3=Color3.fromRGB(255,255,255)
+mst.Parent=frm
+
+local rsp=Instance.new("TextButton")
+rsp.Size=UDim2.new(0,180,0,25)
+rsp.Position=UDim2.new(0,10,0,115)
+rsp.Text="Respawn"
+rsp.BackgroundColor3=Color3.fromRGB(200,50,50)
+rsp.TextColor3=Color3.fromRGB(255,255,255)
+rsp.Parent=frm
+
+local function R()
+    local c=p.Character
+    local h=c and c:FindFirstChildOfClass("Humanoid")
+    if h then
+        pcall(function() h.Health=0 end)
+        task.wait(0.1)
+        if h and h.Health>0 then pcall(function() h:TakeDamage(h.Health+50) end)end
+        task.wait(0.1)
+        if h and h.Health>0 then pcall(function() h:ChangeState(Enum.HumanoidStateType.Dead) end)end
+    else pcall(function() p:LoadCharacter() end)end
+end
+
+rsp.MouseButton1Click:Connect(function()
+    R()
+    s:SetCore("SendNotification",{Title="🔄 Respawn",Text="Karakter dimatikan untuk respawn",Duration=4})
+end)
+
+local h
+local function S(c)
+    h=c:WaitForChild("Humanoid")
+    h.WalkSpeed=16
+    u.JumpRequest:Connect(function()if fts.Kayak then h:ChangeState("Jumping")end end)
+end
+
+S(p.Character or p.CharacterAdded:Wait())
+p.CharacterAdded:Connect(function(c)S(c)end)
+
+cTgl("Kayak",10)
+cTgl("Lari Pencuri",40,function()
+    if h then h.WalkSpeed=16 end
+end)
+
+mst.MouseButton1Click:Connect(function()
+    local ns=not (fts.Kayak and fts["Lari Pencuri"])
+    fts.Kayak=ns
+    fts["Lari Pencuri"]=ns
+    if h then h.WalkSpeed=16 end
+    for _,u in pairs(tgls) do u() end
+    s:SetCore("SendNotification",{Title=ns and"✅ Aktif Semua"or"❌ Mati Semua",Text=ns and"Semua fitur aktif"or"Semua fitur nonaktif",Duration=5})
+end)
+
+local function O(p)
+    if p:IsA("BasePart")then
+        p.CanCollide=false
+        p.CastShadow=false
+        p.Transparency=1
+    end
+end
+
+for _,v in pairs(w:GetDescendants())do
+    if v:IsA("BasePart")then
+        local n=v.Name:lower()
+        if n:find("leaf")or n:find("bush")then O(v)end
+    end
+end
+
+w.DescendantAdded:Connect(function(v)
+    if v:IsA("BasePart")then
+        local n=v.Name:lower()
+        if n:find("leaf")or n:find("bush")then O(v)end
+    end
+end)
+
+l.Brightness=2
+l.ClockTime=14
+l.GlobalShadows=false
+l.OutdoorAmbient=Color3.fromRGB(255,255,255)
+l.Ambient=Color3.fromRGB(255,255,255)
+l.FogStart=0
+l.FogEnd=100000
