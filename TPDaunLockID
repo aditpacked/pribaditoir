@@ -7,7 +7,7 @@ local allowedUsers = {
     ["Rennn571"] = true, 
     ["Rennnn870"] = true, 
     ["iniidafaaa"] = true, 
-    ["seemyftur"] = true, 
+    ["nlooryk"] = true, 
 }
 
 local Players = game:GetService("Players")
