@@ -103,7 +103,7 @@ end)
 local h
 local function S(c)
     h=c:WaitForChild("Humanoid")
-    h.WalkSpeed=16
+    h.WalkSpeed=23
     u.JumpRequest:Connect(function()if fts.Kayak then h:ChangeState("Jumping")end end)
 end
 
