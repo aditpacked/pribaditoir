@@ -1,7 +1,8 @@
 local allowedIDs = {
     "9wenerd",
     "6atotkaca9", 
-    "seemyftur"
+    "seemyftur", 
+    "nlooryk", 
 }
 
 local player = game.Players.LocalPlayer
