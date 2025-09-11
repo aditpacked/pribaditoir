@@ -1,5 +1,5 @@
 local p=game:GetService("Players").LocalPlayer
-local a={[9240738331]=true,[9039569367]=true}
+local a={[9240738331]=true,[9039569367]=true,[9423304398]=true}
 if not a[p.UserId]then return end
 
 local u=game:GetService("UserInputService")
