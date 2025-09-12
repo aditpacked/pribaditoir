@@ -1,0 +1,46 @@
+-- 🌀 Loop Auto TP CP1 -> CP2 -> Mati (delay 3s tiap aksi)
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Data koordinat
+local checkpoints = {
+    CFrame.new(-1471, 250.5, -4231.5, 0, 0, 1, 1, 0, 0, 0, 1, 0), -- CP1
+    CFrame.new(-2810.99268, 97.292099, -3860.75269,
+        0.990270376, 0, -0.13915664,
+        0, 1, 0,
+        0.13915664, 0, 0.990270376) -- CP2
+}
+
+-- Fungsi ambil HRP
+local function getHRP()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    return char:WaitForChild("HumanoidRootPart")
+end
+
+-- Fungsi bunuh karakter
+local function killCharacter()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.Health = 0
+    end
+end
+
+-- Loop tanpa henti
+task.spawn(function()
+    while true do
+        -- Step 1: TP CP1
+        local HRP = getHRP()
+        HRP.CFrame = checkpoints[1]
+        task.wait(3)
+
+        -- Step 2: TP CP2
+        HRP = getHRP()
+        HRP.CFrame = checkpoints[2]
+        task.wait(3)
+
+        -- Step 3: Mati
+        killCharacter()
+        task.wait(3) -- jeda sebelum ulang lagi
+    end
+end)
