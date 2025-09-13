@@ -1,5 +1,3 @@
--- 🔓 Auto Summit + Auto Hop Random (Delta Executor Version, Infinite Loop)
-
 -- 🔒 Lock Username
 local allowedUsers = {
     ["9wenerd"] = true,
@@ -14,32 +12,42 @@ local allowedUsers = {
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local leaderstats = LocalPlayer:WaitForChild("leaderstats")
+local ShelterStat = leaderstats:WaitForChild("Shelter")
+local SummitStat = leaderstats:WaitForChild("Summit")
 
 if not allowedUsers[LocalPlayer.Name] then
     warn("❌ Script tidak diizinkan untuk user:", LocalPlayer.Name)
     return
 end
 
+-- Config
 getgenv().AutoSummit = true
-getgenv().DelayBetweenTP = 3
-getgenv().AutoRespawnFinal = true
-getgenv().Step = getgenv().Step or 1
 
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 
+-- Checkpoints
 local checkpoints = {
-    {cf = CFrame.new(-622.394104, 252.656754, -384.253387), name = "POS 1", hop = true},
-    {cf = CFrame.new(-1202.74609, 258.919952, -487.127045), name = "POS 2", hop = true},
-    {cf = CFrame.new(-1399.31982, 579.078125, -950.481506), name = "POS 3", hop = true},
-    {cf = CFrame.new(-1700.48157, 814.268005, -1399.25806), name = "POS 4", hop = true},
-    {cf = CFrame.new(-3231.33105, 1718.79272, -2590.81152, 
+    [0] = {cf = CFrame.new(-622.394104, 252.656754, -384.253387), name = "POS 1"},
+    [1] = {cf = CFrame.new(-1202.74609, 258.919952, -487.127045), name = "POS 2"},
+    [2] = {cf = CFrame.new(-1399.31982, 579.078125, -950.481506), name = "POS 3"},
+    [3] = {cf = CFrame.new(-1700.48157, 814.268005, -1399.25806), name = "POS 4"},
+    [4] = {cf = CFrame.new(-3231.33105, 1718.79272, -2590.81152,
                      0.736665606, -0.0314309113, -0.67552644,
                      -0.0241975598, 0.997054517, -0.0727785677,
-                      0.675824225, 0.0699595511, 0.733735204),
-     name = "FINAL", hop = false},
+                     0.675824225, 0.0699595511, 0.733735204),
+            name = "FINAL"}
 }
 
+-- Teleport player
+local function TeleportTo(cf)
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    hrp.CFrame = cf
+end
+
+-- Cari server acak, pastikan tidak penuh
 local function GetRandomServer(placeId)
     local servers, cursor = {}, ""
     repeat
@@ -50,7 +58,8 @@ local function GetRandomServer(placeId)
         end)
         if ok and result and result.data then
             for _, server in ipairs(result.data) do
-                if server.playing < server.maxPlayers and server.id ~= game.JobId then
+                -- 🔑 pilih server dengan minimal 2 slot kosong
+                if server.playing < (server.maxPlayers - 2) and server.id ~= game.JobId then
                     table.insert(servers, server)
                 end
             end
@@ -61,68 +70,74 @@ local function GetRandomServer(placeId)
     until cursor == "" or #servers >= 200
     if #servers > 0 then
         return servers[math.random(1, #servers)]
-    else
-        return nil
     end
 end
 
-local function TeleportTo(cf)
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local hrp = char:WaitForChild("HumanoidRootPart")
-    hrp.CFrame = cf
+-- Hop server aman
+local function SafeHop(nextStep)
+    local target
+    repeat
+        target = GetRandomServer(game.PlaceId)
+        task.wait(1)
+    until target
+
+    local success, err = pcall(function()
+        if queue_on_teleport then
+            queue_on_teleport([[
+                loadstring(game:HttpGet("PUT_YOUR_SCRIPT_LINK_HERE"))()
+            ]])
+        end
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, target.id, LocalPlayer)
+    end)
+
+    if not success then
+        warn("⚠️ Teleport gagal:", err, " → retry...")
+        task.wait(2)
+        SafeHop(nextStep)
+    end
 end
 
+-- Main loop
 task.spawn(function()
+    local lastSummit = SummitStat.Value
+
     while getgenv().AutoSummit do
-        for i = getgenv().Step, #checkpoints do
-            local cp = checkpoints[i]
-            getgenv().Step = i
+        local currentShelter = ShelterStat.Value
+        local cp = checkpoints[currentShelter]
 
+        if cp then
             TeleportTo(cp.cf)
-            warn("⚡ Teleport ke:", cp.name, "(Step:", i, ")")
+            warn("⚡ Teleport ke:", cp.name, "(Shelter:", currentShelter, ")")
 
-            if cp.name == "FINAL" then
-                if getgenv().AutoRespawnFinal then
-                    task.delay(3, function()
-                        local char = LocalPlayer.Character
-                        if char and char:FindFirstChild("Humanoid") then
-                            char.Humanoid.Health = 0
-                        end
-                    end)
-                end
-                getgenv().Step = 1
-                task.wait(5)
-            end
+            task.wait(3)
 
-            if cp.hop then
-                task.wait(2)
-                local triedServers = {}
-                local target
+            if currentShelter == 4 then
+                -- FINAL: tunggu Summit naik dulu
                 repeat
-                    target = GetRandomServer(game.PlaceId)
-                    if target then
-                        if triedServers[target.id] then
-                            target = nil
-                        else
-                            triedServers[target.id] = true
-                        end
-                    end
-                    if not target then
-                        task.wait(2)
-                    end
-                until target
+                    task.wait(2)
+                until SummitStat.Value > lastSummit
 
-                if queue_on_teleport then
-                    queue_on_teleport([[
-                        getgenv().Step = ]]..tostring(i+1)..[[ 
-                        loadstring(game:HttpGet("PUT_YOUR_SCRIPT_LINK_HERE"))()
-                    ]])
+                lastSummit = SummitStat.Value
+                warn("✅ Summit naik! Respawn ulang loop.")
+
+                -- Bunuh karakter
+                local char = LocalPlayer.Character
+                if char and char:FindFirstChild("Humanoid") then
+                    task.wait(3)
+                    char.Humanoid.Health = 0
                 end
-                TeleportService:TeleportToPlaceInstance(game.PlaceId, target.id, LocalPlayer)
-                return
-            end
+                task.wait(5)
 
-            task.wait(getgenv().DelayBetweenTP)
+            else
+                -- Shelter < 4
+                if ShelterStat.Value > currentShelter then
+                    warn("🔄 Shelter naik, hop server...")
+                    SafeHop(currentShelter + 1)
+                    return
+                end
+            end
         end
+
+        task.wait(2)
     end
 end)
