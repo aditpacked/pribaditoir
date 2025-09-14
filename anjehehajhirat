@@ -1,5 +1,6 @@
 -- 🌊 Smooth Warp 23 CP + Auto Touch Trigger + Retry (5 detik timeout)
 -- + Silent GUI (ON/OFF) + Auto Summit Return + Anti-Stuck Respawn/Lava + Auto Reset ke CP1
+-- + Watermark Tengah Layar (opacity 20% + glow samar)
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -18,9 +19,9 @@ local summitStat      = leaderstats:WaitForChild("Summit")
 local lastSummit      = summitStat.Value
 
 -- === Konfigurasi ===
-local TIMEOUT_SEC = 5       -- waktu maksimal cek checkpoint
-local TOUCH_RADIUS = 40     -- radius cari checkpoint part
-local TWEEN_TIME = 1.2      -- durasi smooth warp
+local TIMEOUT_SEC = 5
+local TOUCH_RADIUS = 40
+local TWEEN_TIME = 1.2
 local JITTER_TRY_EVERY = 0.25
 
 -- === Daftar 23 CP ===
@@ -50,22 +51,38 @@ local points = {
     CFrame.new(3041.74048,7893.97217,1037.59253)
 }
 
--- === GUI (Silent Mode) ===
+-- === GUI ===
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "SmoothWarpSummit"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
+-- Master Button ON/OFF
 local button = Instance.new("TextButton", screenGui)
 button.Size = UDim2.new(0,120,0,40)
 button.Position = UDim2.new(0.5,-60,0.9,-50)
 button.BackgroundColor3 = Color3.fromRGB(30,30,30)
-button.TextColor3 = Color3.fromRGB(255,255,255)
+button.TextColor3 = Color3.fromRGB(255,80,80) -- merah saat OFF
 button.Text = "OFF"
 button.AutoButtonColor = true
 button.ZIndex = 5
 Instance.new("UICorner", button).CornerRadius = UDim.new(0,8)
+
+-- Watermark Tengah Layar
+local watermark = Instance.new("TextLabel", screenGui)
+watermark.Size = UDim2.new(1,0,1,0)
+watermark.Position = UDim2.new(0.5,0,0.5,0)
+watermark.AnchorPoint = Vector2.new(0.5,0.5)
+watermark.BackgroundTransparency = 1
+watermark.Text = "E N J O Y LER\n- SUCKARDY -"
+watermark.TextColor3 = Color3.fromRGB(200,200,200)
+watermark.Font = Enum.Font.SourceSansBold
+watermark.TextSize = 44
+watermark.TextTransparency = 0.8 -- opacity 20%
+watermark.TextStrokeColor3 = Color3.fromRGB(50,50,50)
+watermark.TextStrokeTransparency = 0.6 -- glow samar
+watermark.Visible = false
 
 -- === Helper ambil Char/Hum/HRP ===
 local function getChar() return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait() end
@@ -128,7 +145,6 @@ local function ensureCheckpointAt(cf)
     local hrp  = getHRP(char)
     local toucher = getToucher(char)
 
-    -- Smooth warp awal
     local tween = TweenService:Create(hrp, TweenInfo.new(TWEEN_TIME, Enum.EasingStyle.Linear), {CFrame = cf + Vector3.new(0,3,0)})
     tween:Play()
     tween.Completed:Wait()
@@ -159,11 +175,19 @@ if SummitButtonToggle then
     end)
 end
 
--- === Main Loop Reworked ===
+-- === Main Loop ===
 local running = false
 button.MouseButton1Click:Connect(function()
     running = not running
-    button.Text = running and "ON" or "OFF"
+    if running then
+        button.Text = "ON"
+        button.TextColor3 = Color3.fromRGB(80,255,80)
+        watermark.Visible = true
+    else
+        button.Text = "OFF"
+        button.TextColor3 = Color3.fromRGB(255,80,80)
+        watermark.Visible = false
+    end
 
     if running then
         task.spawn(function()
@@ -172,11 +196,9 @@ button.MouseButton1Click:Connect(function()
                 local summitNow = summitStat.Value
 
                 if currentCP < #points then
-                    -- target CP berikutnya
                     local targetCF = points[currentCP + 1]
                     local deadline = os.clock() + TIMEOUT_SEC
 
-                    -- spam warp sampai CP naik / mati / timeout
                     while running and checkpointStat.Value == currentCP do
                         if diedFlag then
                             LocalPlayer.CharacterAdded:Wait()
@@ -200,11 +222,10 @@ button.MouseButton1Click:Connect(function()
                         task.wait(0.2)
                     end
                 else
-                    -- sudah di puncak, tunggu Summit naik
                     if summitNow > lastSummit then
                         lastSummit = summitNow
                         returnToBase()
-                        continue -- ulang dari CP1
+                        continue
                     else
                         task.wait(1)
                     end
