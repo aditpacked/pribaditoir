@@ -1,0 +1,15 @@
+-- 🔒 Sistem Lock Username + Loadstring Script
+
+local allowedUsers = {
+    ["9wenerd"] = true,
+    ["6atotkaca9"] = true,
+}
+
+local player = game.Players.LocalPlayer
+if not allowedUsers[player.Name] then
+    player:Kick("Access Denied: Kamu tidak punya izin menjalankan script ini.")
+    return
+end
+
+-- ✅ Kalau lolos lock → jalankan script utama
+loadstring(game:HttpGet("https://raw.githubusercontent.com/aditpacked/pribaditoir/refs/heads/main/anjehehajhirat"))()
