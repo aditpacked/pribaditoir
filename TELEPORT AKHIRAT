@@ -1,0 +1,217 @@
+-- 🌊 Smooth Warp 23 CP + Auto Touch Trigger + Retry (5 detik timeout)
+-- + Silent GUI (ON/OFF) + Auto Summit Return + Anti-Stuck Respawn/Lava + Auto Reset ke CP1
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+-- === Remotes bawaan game ===
+local ReturnToSpawn     = ReplicatedStorage:WaitForChild("ReturnToSpawn", 10)
+local RemoveCarpetEvent = ReplicatedStorage:WaitForChild("RemoveCarpetEvent", 10)
+local SummitButtonToggle = ReplicatedStorage:WaitForChild("SummitButtonToggle", 10)
+
+-- === Leaderstats ===
+local leaderstats     = LocalPlayer:WaitForChild("leaderstats")
+local checkpointStat  = leaderstats:WaitForChild("Checkpoint")
+local summitStat      = leaderstats:WaitForChild("Summit")
+local lastSummit      = summitStat.Value
+
+-- === Konfigurasi ===
+local TIMEOUT_SEC = 5       -- waktu maksimal cek checkpoint
+local TOUCH_RADIUS = 40     -- radius cari checkpoint part
+local TWEEN_TIME = 1.2      -- durasi smooth warp
+local JITTER_TRY_EVERY = 0.25
+
+-- === Daftar 23 CP ===
+local points = {
+    CFrame.new(-135.181076,425.767944,-220.569519),
+    CFrame.new(-3,952.688049,-1054),
+    CFrame.new(109,1204.76392,-1359),
+    CFrame.new(103,1468.37317,-1808),
+    CFrame.new(303.773132,1872.02527,-2327.93188),
+    CFrame.new(560.051208,2088.91992,-2560.06567),
+    CFrame.new(754,2189,-2500),
+    CFrame.new(793,2333,-2641),
+    CFrame.new(969,2521,-2632),
+    CFrame.new(1239,2696,-2803),
+    CFrame.new(1622,3060,-2752),
+    CFrame.new(1812.91406,3581.13208,-3246.35181),
+    CFrame.new(2810.0769,4423.7998,-4794.33008),
+    CFrame.new(3470,4859.7998,-4178),
+    CFrame.new(3478,5109,-4279),
+    CFrame.new(3975,5670.5,-3973),
+    CFrame.new(4498,5901.58594,-3791.99976),
+    CFrame.new(5064,6375.86475,-2979),
+    CFrame.new(5539,6594.5,-2490),
+    CFrame.new(5549,6876.14746,-1050),
+    CFrame.new(4328.00049,7637.64062,132),
+    CFrame.new(3456.16602,7714.40039,938.19043),
+    CFrame.new(3041.74048,7893.97217,1037.59253)
+}
+
+-- === GUI (Silent Mode) ===
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SmoothWarpSummit"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local button = Instance.new("TextButton", screenGui)
+button.Size = UDim2.new(0,120,0,40)
+button.Position = UDim2.new(0.5,-60,0.9,-50)
+button.BackgroundColor3 = Color3.fromRGB(30,30,30)
+button.TextColor3 = Color3.fromRGB(255,255,255)
+button.Text = "OFF"
+button.AutoButtonColor = true
+button.ZIndex = 5
+Instance.new("UICorner", button).CornerRadius = UDim.new(0,8)
+
+-- === Helper ambil Char/Hum/HRP ===
+local function getChar() return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait() end
+local function getHRP(c) return c:WaitForChild("HumanoidRootPart") end
+local function getHum(c) return c:FindFirstChildOfClass("Humanoid") end
+local function getToucher(c) return c:FindFirstChild("RightFoot") or c:FindFirstChild("LeftFoot") or c:FindFirstChild("HumanoidRootPart") end
+
+-- Global currentChar & flag mati
+local currentChar = getChar()
+local diedFlag = false
+
+local function setupDeathListener(char)
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.Died:Connect(function()
+            diedFlag = true
+        end)
+    end
+end
+setupDeathListener(currentChar)
+
+LocalPlayer.CharacterAdded:Connect(function(newChar)
+    currentChar = newChar
+    diedFlag = false
+    task.wait(0.5)
+    setupDeathListener(newChar)
+end)
+
+-- Cari part checkpoint di sekitar posisi
+local function getTouchCandidates(centerPos)
+    local list = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            local okTT = obj:FindFirstChildWhichIsA("TouchTransmitter", true)
+            if okTT and (obj.Position - centerPos).Magnitude <= TOUCH_RADIUS then
+                table.insert(list, obj)
+            end
+        end
+    end
+    return list
+end
+
+-- Simulate touch
+local function tryFireTouch(toucher, target)
+    if firetouchinterest then
+        firetouchinterest(toucher, target, 0)
+        firetouchinterest(toucher, target, 1)
+    elseif firetouchtransmitter then
+        firetouchtransmitter(toucher, target)
+    else
+        if toucher and toucher:IsA("BasePart") then
+            toucher.CFrame = target.CFrame * CFrame.new(0,2,0)
+        end
+    end
+end
+
+-- Warp + paksa trigger CP sekali
+local function ensureCheckpointAt(cf)
+    local char = currentChar or getChar()
+    local hrp  = getHRP(char)
+    local toucher = getToucher(char)
+
+    -- Smooth warp awal
+    local tween = TweenService:Create(hrp, TweenInfo.new(TWEEN_TIME, Enum.EasingStyle.Linear), {CFrame = cf + Vector3.new(0,3,0)})
+    tween:Play()
+    tween.Completed:Wait()
+
+    local candidates = getTouchCandidates(cf.Position)
+    for _, part in ipairs(candidates) do
+        tryFireTouch(toucher, part)
+    end
+end
+
+-- Return ke Basecamp
+local function returnToBase()
+    if RemoveCarpetEvent then RemoveCarpetEvent:FireServer() end
+    task.wait(0.05)
+    if ReturnToSpawn then ReturnToSpawn:FireServer() end
+    LocalPlayer.CharacterAdded:Wait()
+    task.wait(1)
+end
+
+-- Listener langsung ke SummitButtonToggle
+if SummitButtonToggle then
+    SummitButtonToggle.OnClientEvent:Connect(function(arg1)
+        if arg1 then
+            if RemoveCarpetEvent then RemoveCarpetEvent:FireServer() end
+            task.wait(0.05)
+            if ReturnToSpawn then ReturnToSpawn:FireServer() end
+        end
+    end)
+end
+
+-- === Main Loop Reworked ===
+local running = false
+button.MouseButton1Click:Connect(function()
+    running = not running
+    button.Text = running and "ON" or "OFF"
+
+    if running then
+        task.spawn(function()
+            while running do
+                local currentCP = checkpointStat.Value
+                local summitNow = summitStat.Value
+
+                if currentCP < #points then
+                    -- target CP berikutnya
+                    local targetCF = points[currentCP + 1]
+                    local deadline = os.clock() + TIMEOUT_SEC
+
+                    -- spam warp sampai CP naik / mati / timeout
+                    while running and checkpointStat.Value == currentCP do
+                        if diedFlag then
+                            LocalPlayer.CharacterAdded:Wait()
+                            task.wait(1)
+                            break
+                        end
+
+                        ensureCheckpointAt(targetCF)
+
+                        if checkpointStat.Value > currentCP then
+                            break
+                        end
+                        if os.clock() > deadline then
+                            local char = LocalPlayer.Character
+                            local hum = char and char:FindFirstChildOfClass("Humanoid")
+                            if hum then hum.Health = 0 end
+                            LocalPlayer.CharacterAdded:Wait()
+                            task.wait(1)
+                            break
+                        end
+                        task.wait(0.2)
+                    end
+                else
+                    -- sudah di puncak, tunggu Summit naik
+                    if summitNow > lastSummit then
+                        lastSummit = summitNow
+                        returnToBase()
+                        continue -- ulang dari CP1
+                    else
+                        task.wait(1)
+                    end
+                end
+
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
