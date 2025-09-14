@@ -3,6 +3,8 @@
 local allowedUsers = {
     ["9wenerd"] = true,
     ["6atotkaca9"] = true,
+    ["ShedowBlack7"] = true,
+    ["AsepSlebewNie"] = true, 
 }
 
 local player = game.Players.LocalPlayer
