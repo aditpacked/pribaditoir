@@ -1,4 +1,4 @@
-local a={["9wenerd"]=true,["6atotkaca9"]=true,["iniidafaaa"]=true, ["seemyftur"]=true,["ShedowBlack7"]=true, ["dadang7389"]=true}
+local a={["9wenerd"]=true,["6atotkaca9"]=true,["iniidafaaa"]=true, ["seemyftur"]=true,["ShedowBlack7"]=true, ["AsepSlebewNie"]=true}
 local b=game:GetService("Players").LocalPlayer
 if not a[b.Name]then return end
 
